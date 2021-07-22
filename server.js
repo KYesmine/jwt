@@ -3,6 +3,8 @@ const expressLayout = require('express-ejs-layouts')
 const morgan = require('morgan')
 const mongoose = require('mongoose')
 const helmet = require('helmet')
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
 
 require('dotenv').config()
 
@@ -14,6 +16,10 @@ app.use(express.static('public'))
 app.use(expressLayout)
 app.use(express.json())
 app.use(helmet())
+app.use(cors({
+    origin: 'http://localhost:3001'
+}))
+app.use(cookieParser())
 app.use(morgan('dev'))
 
 // View engine
@@ -24,11 +30,14 @@ app.set("layout extractScripts", true)
 
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(response => app.listen(process.env.PORT))
-    .catch(err => console.log(err))
+    .catch(err => {
+        console.error(err)
+        res.send('Connection to database faild!')
+    })
 
 //Routes
-app.get('/', (req, res) => res.render('home', { title: 'home' }))
-app.get('/smoothies', (req, res) => res.render('smoothies', { title: 'smoothies' }))
+app.get('/', (req, res) => res.status(200).render('home', { title: 'home' }))
+app.get('/smoothies', (req, res) => res.status(200).render('smoothies', { title: 'smoothies' }))
 app.use(authRouter)
 
 app.use((req, res, next) => {
