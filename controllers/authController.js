@@ -8,6 +8,10 @@ const handleUserErrors = (err) => {
         errors['email'] = 'This email is already registred'
     }
 
+    if(err.name === 'UserLoginException') {
+        errors[err.type] = err.message
+    }
+
     if(err.message.includes('user validation failed')) {
         Object.values(err.errors).forEach(({ properties }) => {
             errors[properties.path] = properties.message
@@ -24,6 +28,11 @@ const createToken = user => {
     })
 }
 
+const login = (user, res) => {
+    const token = createToken(user)
+    res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge })
+}
+
 module.exports.get_login = (req, res) => {
     res.render('auth/login', { title: 'login' })
 }
@@ -33,10 +42,11 @@ module.exports.post_login = async (req, res) => {
 
     try {
         const user = await User.login(email, password)
+        login(user, res)
         res.status(200).json({ user: user._id })
     } catch(err) {
-        console.error(err)
-        res.status(400).json({})
+        const errors = handleUserErrors(err)
+        res.status(400).json({ errors })
     }
 }
 
@@ -49,12 +59,16 @@ module.exports.post_signup = async (req, res) => {
 
     try {
         const user = await User.create({ email, password })
-        const token = createToken(user)
-        res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 })
+        login(user, res)
         res.status(201).json({ user: user._id })
     } catch(err) {
         console.error(err)
-        const errors = handleUserErrors(err)
+        const errors = handleUserErrors(err.message)
         res.status(400).json({errors})
     }
+}
+
+module.exports.get_logout = (req, res) => {
+    res.cookie('jwt', '', { maxAge: 1 })
+    res.redirect('/')
 }

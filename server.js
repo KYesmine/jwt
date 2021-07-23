@@ -6,6 +6,8 @@ const helmet = require('helmet')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 
+const { requireAuth, checkUser } = require('./middlewares/authMiddleware')
+
 require('dotenv').config()
 
 const app = express()
@@ -28,7 +30,7 @@ app.set('views', 'views')
 app.set('layout', 'layouts/layout')
 app.set("layout extractScripts", true)
 
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
     .then(response => app.listen(process.env.PORT))
     .catch(err => {
         console.error(err)
@@ -36,8 +38,9 @@ mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTo
     })
 
 //Routes
+app.get('*', checkUser)
 app.get('/', (req, res) => res.status(200).render('home', { title: 'home' }))
-app.get('/smoothies', (req, res) => res.status(200).render('smoothies', { title: 'smoothies' }))
+app.get('/smoothies', requireAuth, (req, res) => res.status(200).render('smoothies', { title: 'smoothies' }))
 app.use(authRouter)
 
 app.use((req, res, next) => {

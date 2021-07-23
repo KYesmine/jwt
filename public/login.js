@@ -20,15 +20,16 @@ form.addEventListener("submit", async (e) => {
     })
 
     const result = await response.json()
-    
+    console.error(result)
+
     if(result.errors) {
         emailError.textContent = result.errors.email
         passwordError.textContent = result.errors.password
     }
 
-    // if(result.user) {
-    //     location.assign('/')
-    // }
+    if(result.user) {
+        location.assign('/')
+    }
 
     console.log(result)
 })

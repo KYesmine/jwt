@@ -2,6 +2,8 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 const { isEmail } = require('validator')
 const bcrypt = require('bcrypt')
+const UserException = require('../utils/UserException')
+
 
 const userSchema = new Schema({
     email: {
@@ -31,9 +33,9 @@ userSchema.statics.login = async function(email, password) {
         if(auth) {
             return user
         }
-        throw Error('Incorrect password')
+        throw new UserException('Incorrect password', 'password')
     }
-    throw Error('Incorrect email')
+    throw new UserException('Incorrect email', 'email')
 }
 
 
